@@ -116,6 +116,20 @@ abstract class GeneratorBackend {
     writer.write(_pathContext.join('index.json'), '$json\n');
   }
 
+  /// Emits a Markdown summary of [indexedElements] for use with a search index.
+  void generateLlmSummary(List<Documentable> indexedElements) {
+    var markdown = generator_util.generateLlmSummary(
+      indexedElements,
+      packageOrder: options.packageOrder,
+    );
+
+    if (!options.useBaseHref) {
+      markdown = markdown.replaceAll(htmlBasePlaceholder, '');
+    }
+    
+    writer.write(_pathContext.join('llms.txt'), markdown);
+  }
+
   /// Emits documentation content for the [category].
   void generateCategory(PackageGraph packageGraph, Category category) {
     var data = CategoryTemplateData(options, packageGraph, category);

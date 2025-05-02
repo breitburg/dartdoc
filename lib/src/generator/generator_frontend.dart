@@ -41,6 +41,7 @@ class GeneratorFrontEnd implements Generator {
         .toList(growable: false);
     _generatorBackend.generateCategoryJson(categories);
     _generatorBackend.generateSearchIndex(indexElements);
+    _generatorBackend.generateLlmSummary(indexElements);
   }
 
   @override

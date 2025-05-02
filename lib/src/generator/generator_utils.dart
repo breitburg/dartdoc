@@ -86,6 +86,56 @@ String generateSearchIndexJson(Iterable<Documentable> indexedElements,
   return encoder.convert(indexItems);
 }
 
+/// Generates the text of the LLM-friendly summary file (`index.md`) containing
+/// all [indexedElements] and [packageOrder].
+String generateLlmSummary(Iterable<Documentable> indexedElements,
+    {required List<String> packageOrder}) {
+  var markdownBuffer = StringBuffer();
+
+  // Add a title of the package and a description
+  if (indexedElements.isNotEmpty) {
+    var firstElement = indexedElements.first;
+    markdownBuffer.writeln('# ${firstElement.package.name}');
+    markdownBuffer.writeln();
+    markdownBuffer.writeln(firstElement.package.documentation);
+    markdownBuffer.writeln();
+  }
+
+  markdownBuffer.writeln();
+
+  // Group elements by kind for better organization
+  var elementsByKind = groupBy<Documentable, String>(
+      indexedElements.sorted(_compareElementRepresentations),
+      (element) => element.kind.toString());
+
+  for (var entry in elementsByKind.entries) {
+    markdownBuffer.writeln('## ${entry.key}s');
+    markdownBuffer.writeln();
+
+    for (var element in entry.value) {
+      markdownBuffer.writeln('### ${element.canonicalQualifiedName}');
+
+      if (element is ModelElement) {
+        if (element.oneLineDoc.isNotEmpty) {
+          markdownBuffer.writeln(_removeHtmlTags(element.oneLineDoc));
+        }
+
+        var enclosingElement = element.enclosingElement is Library
+            ? element.canonicalLibrary
+            : element.enclosingElement;
+
+        if (enclosingElement != null) {
+          markdownBuffer.writeln('From ${enclosingElement.name}');
+        }
+      }
+
+      markdownBuffer.writeln();
+    }
+  }
+
+  return markdownBuffer.toString();
+}
+
 /// The "package rank" of [element], given a [packageOrder].
 ///
 /// Briefly, this is 10 times the element's package's position in the
